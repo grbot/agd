@@ -1,0 +1,17 @@
+#!/bin/bash
+#PBS -q WitsLong
+#PBS -l nodes=1:ppn=1
+#PBS -l mem=5gb
+#PBS -l walltime=48:00:00
+#PBS -j oe
+#PBS -M mbymam001@myuct.ac.za
+#PBS -m ea
+#PBS -o /spaces/mamana/AFRICA_CHIP/GAPW/LOG/afr_genomic_diversity.out
+
+
+TODAY=$(date +"%Y_%m_%d__%H_%M_%S")
+HOMEDIR="/home/mamana/GAPW/afr_genomic_diversity"
+OUTDIR="/spaces/mamana/GAPW/LOG"
+
+echo ${OUTDIR}/afr_genomic_diversity_${TODAY}.out
+${HOMEDIR}/afr_genomic_diversity_WITS.sh > ${OUTDIR}/afr_genomic_diversity_${TODAY}.out 2>&1
