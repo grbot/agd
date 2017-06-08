@@ -1,0 +1,22 @@
+#PBS -N get_multi-alleles
+#PBS -S /bin/bash
+#PBS -q WitsLong
+#PBS -l walltime=24:00:00
+#PBS -l nodes=1:ppn=24
+#PBS -m abe
+#PBS -d /spaces/gapw/diversity/gerrit/logs/get_multi-alleles/ 
+#PBS -M gerrit.botha@uct.ac.za
+
+set -x
+
+module load bioinf
+
+ppn=24
+
+rm -rf /spaces/gapw/diversity/gerrit/logs/get_multi-alleles/*.log
+
+# Pull out multi-alleles
+for i in `ls -1 /spaces/gapw/diversity/gerrit/baylor_post_vqsr_clean/*.vcf.gz`; do prefix="${i%.gz}";echo $prefix; done | /home/gerrit/software/parallel-20160422/install/bin/parallel -j $ppn "{ time bcftools view --min-alleles 3 --exclude-types indels {}.gz -O z -o /spaces/gapw/diversity/gerrit/multi_alleles_only/{/.}.multi_alleles_only.vcf.gz ; } > /spaces/gapw/diversity/gerrit/logs/get_multi-alleles/{/.}.multi_alleles_only.vcf.gz.log 2>&1"
+
+# Index VCF
+for i in `ls -1 /spaces/gapw/diversity/gerrit/multi_alleles_only/*.vcf.gz`; do prefix="${i%.gz}";echo $prefix; done | /home/gerrit/software/parallel-20160422/install/bin/parallel -j $ppn "{ time tabix -p vcf {}.gz ; } >> /spaces/gapw/diversity/gerrit/logs/get_multi-alleles/{/.}.vcf.gz.log 2>&1"
