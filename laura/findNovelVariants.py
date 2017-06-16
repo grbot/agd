@@ -35,11 +35,13 @@ for chrom in range(1,23):
     for variant in vcfReader:
         c = c + 1
         if variant.INFO['snp138'][0] == None:
+            if len(variant.INFO['AF']) > 0:
+                sys.stderr.write('chr %d position %d VariantType=%s\n' % (chrom, variant.POS, variant.INFO['VariantType'])
             novel = novel + 1
             outFile.write('%s\t%d\t%f\n' % (variant.CHROM, variant.POS, variant.INFO['AF'][0]) )
-            afSNPnovel.append(float(variant.INFO['AF']))
+            afSNPnovel.append(variant.INFO['AF'][0])
         else:
-            afSNPrsID.append(float(variant.INFO['AF']))
+            afSNPrsID.append(variant.INFO['AF'][0])
 outFile.close()
 sys.stderr.write('Found %d novel variants out of %d (%f)\n' % (novel, c, float(novel)/d ))
 sys.stderr.write('Average frequency novel variants: %f\n' % float(sum(afSNPnovel))/len(afSNPnovel) )
