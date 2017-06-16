@@ -37,6 +37,7 @@ for chrom in range(1,23):
         if variant.INFO['snp138'][0] == None:
             if len(variant.INFO['AF']) > 0:
                 sys.stderr.write('chr %d position %d VariantType=%s\n' % (chrom, variant.POS, variant.INFO['VariantType'])
+                sys.exit()
             novel = novel + 1
             outFile.write('%s\t%d\t%f\n' % (variant.CHROM, variant.POS, variant.INFO['AF'][0]) )
             afSNPnovel.append(variant.INFO['AF'][0])
