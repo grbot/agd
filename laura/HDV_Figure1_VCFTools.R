@@ -3,9 +3,9 @@ findCommonVars <- function(varPop1, varPop2) {
     match <- intersect(varPop1, varPop2)
     rowPop1 <- which(varPop1 %in% match)
     rowPop2 <- which(varPop2 %in% match)
-    print(length(match))
-    print(length(rowPop1))
-    print(length(rowPop2))
+#    print(length(match))
+#    print(length(rowPop1))
+#    print(length(rowPop2))
     return(list(rowPop1  = rowPop1, rowPop2 = rowPop2))
 }
 
@@ -42,8 +42,8 @@ for (pop1 in 1:(length(popList)-1)) {
     HDVcounter=0 ## This will tells us whether we have HDVs at all, to write an output log file
     out <- c()
     for (chr in 22:22) {
-      pop1FrqFile <- read.delim2(paste(popList[pop1], "_phased_chr", chr, frqFileExtension, sep=""), skip=1, header=T, stringsAsFactors=FALSE)
-      pop2FrqFile <- read.delim2(paste(popList[pop2], "_phased_chr", chr, frqFileExtension, sep=""), skip=1, header=T, stringsAsFactors=FALSE)
+      pop1FrqFile <- read.delim2(paste(popList[pop1], "_phased_chr", chr, frqFileExtension, sep=""), skip=1, header=F, stringsAsFactors=FALSE)
+      pop2FrqFile <- read.delim2(paste(popList[pop2], "_phased_chr", chr, frqFileExtension, sep=""), skip=1, header=F, stringsAsFactors=FALSE)
       varPop1 <- as.vector(pop1FrqFile[,2])
       varPop2 <- as.vector(pop2FrqFile[,2])
       biallelicPop1 <- includeBiallelicOnly(varPop1)
@@ -84,7 +84,7 @@ for (pop1 in 1:(length(popList)-1)) {
     deltaVectorNoZero <- deltaVector[which(deltaVector != 0)]
     frqList <- round(deltaVectorNoZero, digits=1)
     # Now we save v so that we are able to know in the future what are the exact number of variants for each ferquency bin
-    write.table(rbind(binVector[-which(binVector==0)],v), paste(popList[pop1],"-",popList[pop2], "_delta60Distribution.txt",sep=""), quote=FALSE, col.names=FALSE, row.names=FALSE, sep="\t")
+    write.table(table(frqList), paste(popList[pop1],"-",popList[pop2], "_delta60Distribution.txt",sep=""), quote=FALSE, col.names=FALSE, row.names=FALSE, sep="\t")
     
     pdf(file = paste("Figure1_",popList[pop1],popList[pop2],"_Delta", delta, "Distribution.pdf",sep=""),width = 16, height=7)
     layout(matrix(c(0,1,0,2,1,3,2,1,3,2,1,3,0,1,0), nrow=5, ncol=3, byrow = TRUE), widths=c(2,8,2), height=1, respect = FALSE)
