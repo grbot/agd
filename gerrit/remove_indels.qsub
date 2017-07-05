@@ -1,0 +1,27 @@
+#PBS -N remove_indels
+#PBS -S/bin/bash
+#PBS -q WitsLong
+#PBS -l walltime=24:00:00
+#PBS -l nodes=1:ppn=24
+#PBS -m abe
+#PBS -d /spaces/gapw/diversity/gerrit/logs/remove_indels/ 
+#PBS -M gerrit.botha@uct.ac.za
+
+set -x
+
+hostname
+
+module load bioinf
+
+ppn=24
+
+rm -rf /spaces/gapw/diversity/gerrit/logs/remove_indels/*.log
+
+# Remove INDELs
+for i in `ls -1 /spaces/gapw/diversity/gerrit/multi_alleles_only/*.vcf.gz`; do prefix="${i%.gz}";echo $prefix; done | /home/gerrit/software/parallel-20160422/install/bin/parallel -j $ppn "{ time zcat {}.gz | awk '/^#/{print;next}(\$5!~/*/){print}' > /spaces/gapw/diversity/gerrit/no_indels/{/.}.no_indels.vcf ; } > /spaces/gapw/diversity/gerrit/logs/remove_indels/{/.}.no_indels.vcf.gz.log 2>&1"
+
+# Bgzip
+for i in `ls -1 /spaces/gapw/diversity/gerrit/no_indels/*.vcf`; do prefix="${i%.vcf}";echo $prefix; done | /home/gerrit/software/parallel-20160422/install/bin/parallel -j $ppn "{ time bgzip {}.vcf ; } >> /spaces/gapw/diversity/gerrit/logs/remove_indels/{/.}.no_indels.vcf.gz.log 2>&1"
+
+# Index VCF
+for i in `ls -1 /spaces/gapw/diversity/gerrit/no_indels/*.vcf.gz`; do prefix="${i%.gz}";echo $prefix; done | /home/gerrit/software/parallel-20160422/install/bin/parallel -j $ppn "{ time tabix -p vcf {}.gz ; } >> /spaces/gapw/diversity/gerrit/logs/remove_indels/{/.}.vcf.gz.log 2>&1"
