@@ -1,0 +1,17 @@
+#!/bin/bash
+#PBS -q smp
+#PBS -l select=1:ncpus=24
+#PBS -P CBBI0825
+#PBS -l walltime=48:00:00
+#PBS -j oe
+#PBS -o /mnt/lustre/users/mmbiyavanga/GAPW/LOG/afr_genomic_diversity.out
+#PBS -M mbymam001@myuct.ac.za
+#PBS -m ae
+
+
+TODAY=$(date +"%Y_%m_%d__%H_%M_%S")
+HOMEDIR="/home/mmbiyavanga/GAPW/afr_genomic_diversity"
+OUTDIR="/mnt/lustre/users/mmbiyavanga/GAPW/LOG"
+
+echo ${OUTDIR}/afr_genomic_diversity_${TODAY}.out
+${HOMEDIR}/afr_genomic_diversity_nf_CHPC.sh > ${OUTDIR}/afr_genomic_diversity_${TODAY}.out 2>&1
