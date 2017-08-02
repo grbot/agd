@@ -68,7 +68,7 @@ process filter_vcf_by_depth {
     memory { 4.GB * task.attempt }
     time = { 2.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_FILTERED/", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_FILTERED/", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_FILTERED/", overwrite: true, mode:'symlink'
     input:
         set val(chrm), file(vcf_file) from vcf_data
     output:
@@ -89,10 +89,10 @@ vcf_6depth.into { vcf_6depth; vcf_6depth__anc } // Duplicate channel so that it 
 process add_ANC_to_VCF {
     echo true
     tag "AA_${chrm}"
-    memory { 8.GB * task.attempt }
+    memory { 2.GB * task.attempt }
     time = { 4.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_ANC/", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_ANC/", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_ANC/", overwrite: true, mode:'symlink'
     input:
         set val(chrm), file(vcf_file), file(vcf_file_tbi) from vcf_6depth__anc
     output:
@@ -116,10 +116,10 @@ vcf_anc.into { vcf_anc; vcf_anc__only}
 process add_ANC_to_VCF_only {
     echo true
     tag "AA_only_${chrm}"
-    memory { 2.GB * task.attempt }
+    memory { 1.GB * task.attempt }
     time = { 2.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_ANC/", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_ANC/", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_ANC/", overwrite: true, mode:'symlink'
     input:
         set val(chrm), file(vcf_dp6_anc), file(vcf_dp6_anc_tbi) from vcf_anc__only
     output:
@@ -160,10 +160,10 @@ vcf_anc_f.into { vcf_anc_f; vcf_anc_f__dbsnp}
 process annotate_dbsnp_snpeff {
     echo true
     tag "dbSNP_${chrm}"
-    memory { 8.GB * task.attempt }
+    memory { 4.GB * task.attempt }
     time = { 6.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_ANN/", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_ANN/", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_ANN/", overwrite: true, mode:'symlink'
     input:
         set val(chrm), file(vcf_dp6_anc_f) from vcf_anc_f__dbsnp
     output:
@@ -174,6 +174,7 @@ process annotate_dbsnp_snpeff {
         SnpSift \
             annotate \
             ${params.dbsnp_vcf} \
+            -c ${params.snpeff_config} \
             ${vcf_dp6_anc_f} > ${vcf_out} -v
         bgzip -f ${vcf_out}
         """
@@ -186,10 +187,10 @@ Step 5
 process annotate_snpeff {
     echo true
     tag { "snpEff_${chrm}" }
-    memory { 8.GB * task.attempt }
+    memory { 4.GB * task.attempt }
     time = { 6.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_ANN/", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_ANN/", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_ANN/", overwrite: true, mode:'symlink'
     input:
         set val(chrm), file(vcf_dp6_anc_f_dbsnp) from annotate_dbsnp_snpeff_all
     output:
@@ -203,6 +204,7 @@ process annotate_snpeff {
             -stats ${vcf_in}.html \
             -csvStats ${vcf_in}.csv \
             -dataDir ${params.snpEff_database} \
+            -c ${params.snpeff_config} \
             ${vcf_dp6_anc_f_dbsnp} > ${vcf_out} -v -nodownload
         bgzip -f ${vcf_out}
         """
@@ -218,7 +220,7 @@ process split_POP_samples {
     memory { 2.GB  * task.attempt }
     time = { 1.hour * task.attempt }
     publishDir "${params.work_dir}/samples/", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/samples/", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/samples/", overwrite: true, mode:'symlink'
     input:
         val POP from POPS_ALL
     output:
@@ -249,7 +251,7 @@ process split_vcf_per_pop {
     memory { 2.GB * task.attempt }
     time = { 2.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_POP/${POP}", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_POP/${POP}", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_POP/${POP}", overwrite: true, mode:'symlink'
     input:
         set val(POP), file(POP_sample_file), val(chrm), file(chrm_vcf_file) from annotate_snpeff_all__split_pop_cha
     output:
@@ -276,7 +278,7 @@ process daf_by_chrm_pop {
     memory { 2.GB * task.attempt }
     time = { 2.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_POP/DAF", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_POP/DAF", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_POP/DAF", overwrite: true, mode:'symlink'
     input:
         set val(POP), val(chrm), file(vcf_pop_chrm) from split_vcf_per_pop__daf_by_chrm_pop
     output:
@@ -292,7 +294,7 @@ process daf_by_chrm_pop {
 }
 daf_by_chrm_pop.into{ daf_by_chrm_pop; daf_by_chrm_pop_sub}
 daf_by_chrm_pop_sub.subscribe {
-    println "|-- Finished for ${it[-1][-1]}"
+    println "|-- Finished ${it[-1][-1]}"
 }
 
 '''
@@ -313,10 +315,10 @@ merge_vcf_pop_cha.into { merge_vcf_pop_cha; merge_vcf_pop__merge}
 process merge_vcf_pop {
     echo true
     tag { "merge_vcf_pop_${POP}" }
-    memory { 5.GB * task.attempt }
+    memory { 4.GB * task.attempt }
     time = { 2.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_POP/${POP}", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_POP/${POP}", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_POP/${POP}", overwrite: true, mode:'symlink'
     input:
         val datas from merge_vcf_pop__merge
     output:
@@ -339,7 +341,7 @@ process daf_by_pop {
     memory { 5.GB * task.attempt }
     time = { 2.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_POP/DAF", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_POP/DAF", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_POP/DAF", overwrite: true, mode:'symlink'
     input:
         set val(POP), file(vcf_pop) from merge_vcf_pop__daf
     output:
@@ -354,6 +356,23 @@ process daf_by_pop {
         """
 }
 
+process sfs_by_pop {
+    echo true
+    tag { "sfs_${POP}" }
+    memory { 5.GB * task.attempt }
+    time = { 2.hour * task.attempt }
+    publishDir "${params.work_dir}/VCF_POP/SFS", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_POP/SFS", overwrite: true, mode:'symlink'
+    input:
+        set val(POP), file(vcf_frq) from daf_by_pop
+    output:
+        set val(POP), file(sfs_plot) into sfs_by_pop
+    script:
+        popID = POP
+        frq_input = vcf_frq
+        sfs_plot = "${vcf_frq.baseName}.sfs.pdf"
+        template "CreateSFSandDerivedCounts.R"
+}
 
 '''
 Extract number of singletons per population
@@ -362,10 +381,10 @@ merge_vcf_pop.into { merge_vcf_pop; merge_vcf_pop__singl}
 process singl_by_pop {
     echo true
     tag { "singl_${POP}" }
-    memory { 5.GB * task.attempt }
+    memory { 4.GB * task.attempt }
     time = { 2.hour * task.attempt }
     publishDir "${params.work_dir}/VCF_POP/SINGL", overwrite: true, mode:'symlink'
-    publishDir "${params.group_dir}/VCF_POP/SINGL", overwrite: true, mode:'symlink'
+//    publishDir "${params.group_dir}/VCF_POP/SINGL", overwrite: true, mode:'symlink'
     input:
         set val(POP), file(vcf_pop) from merge_vcf_pop__singl
     output:
