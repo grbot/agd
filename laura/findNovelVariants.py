@@ -12,7 +12,7 @@ for opt, par in options:
     if opt == '-h':	
         print 'options:'	
         print '-h: print this help and exit'
-        print '-p: <pathLoc> specify path (path/) where vcf file is located'
+        print '-p: <pathLoc> specify vcf file'
         print '-o: <outFName> specify output txt file'
         sys.exit()
     elif opt == '-p':
@@ -28,22 +28,26 @@ c = 0 #counter of total number of polymorphisms
 novel = 0 #counter of novel variants
 afSNPrsID = []
 afSNPnovel = []
-for chrom in range(1,23): 
+for chrom in [21]: #range(1,23): 
     sys.stderr.write('starting chromosome %d\n' % chrom)
-    vcfFName = '%sbaylor_phased_chr%d_dp6_anc_f_dbsnp_snpeff.vcf.gz' % (pathLoc, chrom)
+    vcfFName = '%s/baylor_phased_chr%d_dp6_anc_f_dbsnp_snpeff_short.vcf.gz' % (pathLoc, chrom)
     vcfReader = vcf.Reader(filename=vcfFName)
     for variant in vcfReader:
         c = c + 1
-        if variant.INFO['snp138'][0] == None:
-            if len(variant.INFO['AF']) > 0:
-                sys.stderr.write('chr %d position %d VariantType=%s\n' % (chrom, variant.POS, variant.INFO['VariantType'])
+        if variant.INFO['snp138'][0] == None: # Variant not in dbSNP and therefore, novel
+            if len(variant.INFO['AF']) > 1:
+                print variant.INFO
+                print variant.ALT
+                print variant.REF
+                sys.stderr.write('chr %d position %d VariantType=%s\n' % (chrom, variant.POS, variant.INFO['VariantType']))
                 sys.exit()
             novel = novel + 1
-            outFile.write('%s\t%d\t%f\n' % (variant.CHROM, variant.POS, variant.INFO['AF'][0]) )
-            afSNPnovel.append(variant.INFO['AF'][0])
+            outFile.write('%s\t%d\t%d\t%f\n' % (variant.CHROM, variant.POS-1, variant.POS, variant.INFO['AF'][0]) )
+            afSNPnovel.append(float(variant.INFO['AF'][0]))
         else:
-            afSNPrsID.append(variant.INFO['AF'][0])
+            afSNPrsID.append(float(variant.INFO['AF'][0]))
 outFile.close()
-sys.stderr.write('Found %d novel variants out of %d (%f)\n' % (novel, c, float(novel)/d ))
-sys.stderr.write('Average frequency novel variants: %f\n' % float(sum(afSNPnovel))/len(afSNPnovel) )
-sys.stderr.write('Average frequency of discovered variants: %f\n' % float(sum(afSNPrsID))/len(afSNPrsID) ) 
+print afSNPnovel[0:10]
+sys.stderr.write('Found %d novel variants out of %d (percent: %f)\n' % (novel, c, float(novel)/c ))
+sys.stderr.write('Average frequency novel variants: %f\n' % (sum(afSNPnovel)/len(afSNPnovel)) )
+sys.stderr.write('Average frequency of known variants: %f\n' % (sum(afSNPrsID)/len(afSNPrsID)) ) 
