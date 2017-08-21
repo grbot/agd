@@ -102,7 +102,7 @@ for (pop1 in 1:(length(popList)-1)) {
       par(mar=c(5.1,2.1,2,1))
       hist(round(HDV1, digits = 2), col = rep("blue4",9), breaks = seq(-1, -delta, by=0.05), ylim=c(0, yax_max), xlab = "", ylab="", main=paste(popList[pop2], "=", length(HDV1), sep = " ") )
       par(mar=c(5.1,0,2,1.1))
-      hist(round(HDV2, digits=1), col=rep("gold",9), breaks = seq(delta,1,by=0.05), ylim=c(0, yax_max), xlab="", ylab="", main=paste(popList[pop1], "=", length(HDV2), sep="") )
+      hist(round(HDV2, digits=2), col=rep("gold",9), breaks = seq(delta,1,by=0.05), ylim=c(0, yax_max), xlab="", ylab="", main=paste(popList[pop1], "=", length(HDV2), sep="") )
     } 
     dev.off()
 
