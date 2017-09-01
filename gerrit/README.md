@@ -6,8 +6,9 @@
 
 ## Some additional one liners
 *Create one column file for IBT to be filltered*
-* `cat /spaces/gapw/diversity/filter/related.remove | cut -f 1 >  /spaces/gapw/diversity/filter/related.remove.mamana_ready`
+* `cat /spaces/gapw/diversity/filter/related.remove | awk '{print "^"$1}' > /spaces/gapw/diversity/filter/related.remove.mamana_ready`
 
-*Get MAF annotation for SAHGP en AGVP sets*
+*Get MAF annotation for SAHGP, AGVP and TrypanoGEN sets*
 * `cat /spaces/gapw/diversity/dbs/agv3f.frq.frq | grep -v "CHR" | awk '{print $2"\t"$5}' | awk '{if($2!=0){print $0}}' > /spaces/gapw/diversity/dbs/agv3f.frq.frq.mamana_ready`
 * `cat /spaces/gapw/diversity/dbs/sahgp_macs | awk '{print $1"\t"$3/30}' | sed "s/_/:/" > /spaces/gapw/diversity/dbs/sahgp_macs.mamana_ready`
+* `grep -v "CHROM" /spaces/gapw/diversity/gerrit/trypanogen_maf/trypanogen.all.phased.frq  | awk '{print $1"_"$2"\t"$6}' | awk '{if($2!=0){print $0}}' | sed "s/.://" | sed "s/_/:/" > /spaces/gapw/diversity/dbs/trypanogen.all.phased.frq.mamana_ready`
