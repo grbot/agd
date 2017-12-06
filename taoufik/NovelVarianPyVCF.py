@@ -19,8 +19,8 @@ thresholdaf = args.af_min
 thresholdgnomad = args.gnom_ad
 outputfolder = args.output_folder
 vcfinput=args.vcf_input
-dictionarygnomAD= {'gnomAD_AF','gnomAD_AFR_AF','gnomAD_FIN_AF','gnomAD_NFE_AF','gnomAD_AMR_AF','gnomAD_EAS_AF'}
-dictionaryknownsnps={'dbSNPBuildID','CDA','CLNACC','CLNSRC','KGPhase1','KGPilot123','KGPROD','KGValidated','OM','PM','PMC','RS'}
+dictionarygnomAD= {'gnomAD_AF','gnomAD_AFR_AF','gnomAD_FIN_AF','gnomAD_NFE_AF','gnomAD_AMR_AF','gnomAD_EAS_AF','AF_EXAC','ExAC_AF','ExAC_AFR_AF','ExAC_FIN_AF','ExAC_NFE_AF','ExAC_AMR_AF','ExAC_EAS_AF','AGVP_AF','SAHGP_AF','TRYPANOGEN_AF','KG_AF','KG_AFR_AF','KG_EUR_AF','KG_AMR_AF','KG_EAS_AF'}
+dictionaryknownsnps={'dbSNPBuildID','CDA','CLNACC','CLNVI','CLNSIGINCL','CLNSRC','KGPhase1','KGPilot123','KGPROD','KGValidated','OM','PM','PMC','RS','GWASCAT_TRAIT','GWASCAT_REPORTED_GENE','GWASCAT_PUBMED_ID'}
 ##Print
 print 'Filtering %s by %s and gnomAD threshold %f' % (vcfinput,dictionaryknownsnps,thresholdgnomad)
 print 'gnomAD dictionary ',dictionarygnomAD,'\n'
