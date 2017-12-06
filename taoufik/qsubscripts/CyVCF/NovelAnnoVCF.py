@@ -82,6 +82,7 @@ for variant in vcfReader:
 		afSNPnovel.append(float(variant.INFO['AF']))
 	else:
 		afSNPrsID.append(float(variant.INFO['AF']))
+vcfWriter.close()
 if os.path.splitext(base)[1]=='.gz':
 	with open(outputvcf) as src, gzip.open(outputvcfgz, 'wb') as dst:
 		dst.writelines(src)
