@@ -11,7 +11,7 @@ import time
 parser = argparse.ArgumentParser(description='Filtering Novel SNPs')
 parser.add_argument('--vcf-input', type=str, default=None, help='Output Filtred')
 #parser.add_argument('--db-snpid', type=str, default='dbSNPBuildID', help='Filter Not in dbsnp ')
-parser.add_argument('--gnom-ad', type=float, default=0.0, help='Filter Not in gnomAD ')
+parser.add_argument('--gnom-ad', type=float, default=0.0, help='Filter Not in gnomAD or elsewhere')
 parser.add_argument('--af-min', type=float, default=0.0, help='Filter AF ')
 parser.add_argument('--output-folder', type=str, default=None, help='Output folder ')
 ##Parsing inputs
@@ -20,8 +20,9 @@ thresholdaf = args.af_min
 thresholdgnomad = args.gnom_ad
 outputfolder = args.output_folder
 vcfinput=args.vcf_input
-dictionarygnomAD= {'gnomAD_AF','gnomAD_AFR_AF','gnomAD_FIN_AF','gnomAD_NFE_AF','gnomAD_AMR_AF','gnomAD_EAS_AF'}
-dictionaryknownsnps={'dbSNPBuildID','CDA','CLNACC','CLNSRC','KGPhase1','KGPilot123','KGPROD','KGValidated','OM','PM','PMC','RS'}
+dictionarygnomAD= {'gnomAD_AF','gnomAD_AFR_AF','gnomAD_FIN_AF','gnomAD_NFE_AF','gnomAD_AMR_AF','gnomAD_EAS_AF','AF_EXAC','ExAC_AF','ExAC_AFR_AF','ExAC_FIN_AF','ExAC_NFE_AF','ExAC_AMR_AF','ExAC_EAS_AF','AGVP_AF','SAHGP_AF','TRYPANOGEN_AF','KG_AF','KG_AFR_AF','KG_EUR_AF','KG_AMR_AF','KG_EAS_AF'}
+dictionaryknownsnps={'dbSNPBuildID','CDA','CLNACC','CLNVI','CLNSIGINCL','CLNSRC','KGPhase1','KGPilot123','KGPROD','KGValidated','OM','PM','PMC','RS','GWASCAT_TRAIT','GWASCAT_REPORTED_GENE','GWASCAT_PUBMED_ID'}
+
 ##Print
 print 'Filtering %s by %s and gnomAD threshold %f' % (vcfinput,dictionaryknownsnps,thresholdgnomad)
 print 'gnomAD dictionary ',dictionarygnomAD,'\n'
@@ -35,7 +36,7 @@ novelway="Not known snp or threshold gnomad"
 ##Check novel
 def isNovel(record):
 	global novelway 
-	if record.INFO.get('AF') <= thresholdaf:
+	if record.INFO.get('AF') < thresholdaf:
 		return False
 	for val in dictionaryknownsnps:
 		if record.INFO.get(val) != None:
@@ -72,8 +73,10 @@ for variant in vcfReader:
 	c = c + 1
 	#if c==100:
 	#	break
+	print "&&&",str(variant.INFO.get('RS'))
 	if isNovel(variant): # Variant not in dbSNP and therefore, novel
 		variant.INFO["NovelSNP"] = novelway
+		print variant.INFO.get('RS')
 		vcfWriter.write_record(variant)
 		novel = novel + 1
 		outFile.write('%s\t%d\t%d\t%f\n' % (variant.CHROM, variant.POS-1, variant.POS, variant.INFO['AF']) )
