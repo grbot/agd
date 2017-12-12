@@ -41,7 +41,7 @@ process getPerPopulationVCF {
 	 each chrom from chroms  
 
     output:
-	   file("{$pop}.{$chrom}.baylor.annotated.vcf.gz") into pop_chrom_file 
+	   file("${pop}.${chrom}.baylor.annotated.vcf.gz") into pop_chrom_file 
 
     """
     /opt/exp_soft/bcftools-1.6/install/bin/bcftools view -S ${sample_to_population_mapping_dir}/${pop}_sample_id_only.tsv ${in_dir}/Eagle.baylor.${chrom}.vcf.gz -O z -o ${pop}.${chrom}.baylor.vcf.gz
