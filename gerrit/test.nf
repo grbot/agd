@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-out_path = file(params.out)
+out_path = file(params.test_out_dir)
 
 out_path.mkdir()
 
