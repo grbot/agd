@@ -12,3 +12,9 @@
 * `cat /spaces/gapw/diversity/dbs/agv3f.frq.frq | grep -v "CHR" | awk '{print $2"\t"$5}' | awk '{if($2!=0){print $0}}' > /spaces/gapw/diversity/dbs/agv3f.frq.frq.mamana_ready`
 * `cat /spaces/gapw/diversity/dbs/sahgp_macs | awk '{print $1"\t"$3/30}' | sed "s/_/:/" > /spaces/gapw/diversity/dbs/sahgp_macs.mamana_ready`
 * `grep -v "CHROM" /spaces/gapw/diversity/gerrit/trypanogen_maf/trypanogen.all.phased.frq  | awk '{print $1"_"$2"\t"$6}' | awk '{if($2!=0){print $0}}' | sed "s/.://" | sed "s/_/:/" > /spaces/gapw/diversity/dbs/trypanogen.all.phased.frq.mamana_ready`
+
+# Calculating per population SNP stats
+1. Test nextflow script - `nextflow -log nextflow.log run -w /global5/scratch/gerrit/projects/gapw/nextflow/workdir -c /home/gerrit/code/agd/gerrit/nextflow.config /home/gerrit/code/agd/gerrit/test.nf -profile pbs` 
+
+2. Get per population VCFs - `nextflow -log nextflow.log run -w /global5/scratch/gerrit/projects/gapw/nextflow/workdir -c /home/gerrit/code/agd/gerrit/nextflow.config /home/gerrit/code/agd/gerrit/get_per_population_vcf_baylor.nf -profile pbs`
+ 
