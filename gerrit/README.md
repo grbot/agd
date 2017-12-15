@@ -16,5 +16,7 @@
 # Calculating per population SNP stats
 1. Test nextflow script - `nextflow -log nextflow.log run -w /global5/scratch/gerrit/projects/gapw/nextflow/workdir -c /home/gerrit/code/agd/gerrit/nextflow.config /home/gerrit/code/agd/gerrit/test.nf -profile pbs` 
 
-2. Get per population VCFs - `nextflow -log nextflow.log run -w /global5/scratch/gerrit/projects/gapw/nextflow/workdir -c /home/gerrit/code/agd/gerrit/nextflow.config /home/gerrit/code/agd/gerrit/get_per_population_vcf_baylor.nf -profile pbs`
+2. Get per population VCFs - `nextflow -log nextflow.log run -w /global5/scratch/gerrit/projects/gapw/nextflow/workdir -c /home/gerrit/code/agd/gerrit/nextflow.config /home/gerrit/code/agd/gerrit/get_per_population_vcf_baylor.nf -profile pbs` (This did not run successfully on Hex. It had to something to do with the storage that was to slow to copy data over. Will however update this part to run on the merged phased set on Wits.
+
+3. Get sites that have `ALT=.` and also count the total number of sites in the merged phased set -`nextflow -log nextflow.log run -w /spaces/gapw/diversity/gerrit/nextflow/workdir -c /home/gerrit/projects/agd/gerrit/nextflow.config /home/gerrit/projects/agd/gerrit/get_unidentified_alt_from_merged_phased.nf -profile pbs`
  
