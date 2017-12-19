@@ -405,12 +405,12 @@ process remove_noALT_merge {
         snp_out = "${file(vcf_file.baseName).baseName}_noALT.snp"
         """
         ${params.venv}/bin/bcftools \
-            view  -i 'ALT="."' ${vcf_file} | \
+            view -i 'ALT="."' ${vcf_file} | \
         ${params.venv}/bin/bcftools \
             query -f '%CHROM  %POS  %REF  %ALT\n' \
             > ${snp_out}
         ${params.venv}/bin/bcftools \
-            view  -i 'ALT="."' ${vcf_file} \
+            view -e 'ALT="."' ${vcf_file} \
             -Oz -o ${vcf_out}
         ${params.venv}/bin/bcftools index --tbi -f ${vcf_out}
         """
