@@ -7,6 +7,8 @@ import os
 import gzip
 import time
 import shutil
+import sh
+import subprocess
 ##Parser
 parser = argparse.ArgumentParser(description='Filtering Novel SNPs')
 parser.add_argument('--vcf-input', type=str, default=None, help='Output Filtred')
@@ -22,6 +24,7 @@ thresholdgnomad = args.gnom_ad
 outputfolder = args.output_folder
 vcfinput=args.vcf_input
 vcfoutch = args.out
+vcfoutchbgz = vcfoutch.replace(".gz",".bgz")
 dictionarygnomAD= {'gnomAD_AF','gnomAD_AFR_AF','gnomAD_FIN_AF','gnomAD_NFE_AF','gnomAD_AMR_AF','gnomAD_EAS_AF','AF_EXAC','ExAC_AF','ExAC_AFR_AF','ExAC_FIN_AF','ExAC_NFE_AF','ExAC_AMR_AF','ExAC_EAS_AF','AGVP_AF','SAHGP_AF','TRYPANOGEN_AF','KG_AF','KG_AFR_AF','KG_EUR_AF','KG_AMR_AF','KG_EAS_AF'}
 dictionaryknownsnps={'dbSNPBuildID','CDA','CLNACC','CLNVI','CLNSIGINCL','CLNSRC','KGPhase1','KGPilot123','KGPROD','KGValidated','OM','PM','PMC','RS','GWASCAT_TRAIT','GWASCAT_REPORTED_GENE','GWASCAT_PUBMED_ID'}
 
@@ -67,7 +70,7 @@ if os.path.splitext(base)[1]=='.gz':
 
 else:
 	outputvcf ='%s%s/%s_Novel%s'%(outputfolder,os.path.splitext(os.path.splitext(base)[0])[0].split('_')[0],os.path.splitext(base)[0],os.path.splitext(base)[1])
-
+outputvcfbgz = outputvcfgz.replace(".gz",".bgz")
 vcfWriter = Writer(outputvcf, vcfReader)
 ##Filtering
 for variant in vcfReader:
@@ -82,6 +85,16 @@ vcfWriter.close()
 if os.path.splitext(base)[1]=='.gz':
 	with open(outputvcf) as src, gzip.open(vcfoutch, 'wb') as dst:
 		dst.writelines(src)
-	os.remove(outputvcf)
-	shutil.copy(vcfoutch,outputvcfgz)
+	#sh.bgzip("-c",outputvcf, _out=vcfoutchbgz)
+	bashCommand = "bgzip  %s" % outputvcf
+	process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+	output, error = process.communicate()
+	print error
+	#shutil.copy(vcfoutch,outputvcfgz)
+	#shutil.copy(vcfoutchbgz,outputvcfbgz)
+	bashCommand = "tabix -f %s" % outputvcfgz
+	process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+	output, error = process.communicate()
+	print error
+	#os.remove(outputvcf)
 #print("--- %s seconds ---" % (time.time() - start_time))

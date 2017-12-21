@@ -7,7 +7,7 @@ import gzip
 import time
 import shutil
 import re
-import fastcsv
+import csv
 ##Parser
 parser = argparse.ArgumentParser(description='Statistics on Doubletons, Singletons and Tripletons Variants')
 parser.add_argument('--freq-input', type=str, default=None, help='Freq file input')
@@ -44,20 +44,21 @@ outFName ='%s%s/%s_%s_Singletons_Doubletons_Tripletons.csv'%(outputfolder,os.pat
 outFNameReduced ='%s%s/%s_%s_Singletons_Doubletons_Tripletons_Reduced.csv'%(outputfolder,os.path.splitext(os.path.splitext(base)[0])[0].split('_')[0],os.path.splitext(os.path.splitext(base)[0])[0].split('_')[0],re.findall('\\d+', freqinput)[0])
 population = os.path.splitext(os.path.splitext(base)[0])[0].split('_')[0]
 ##Filtering
-with fastcsv.Reader(open(freqinput)) as reader:
-    next(reader)
-    for row in reader:
-        c = c + 1
-        if int(row[0].split('\t')[5].split(":")[1]) == 1:
-            csingle = csingle + 1
-            #print(row)
-            spos.append(row[0].split('\t')[1])
-        if int(row[0].split('\t')[5].split(":")[1]) == 2:
-            cdouble = cdouble + 1
-            dpos.append(row[0].split('\t')[1])
-        if int(row[0].split('\t')[5].split(":")[1]) == 3:
-            ctriple = ctriple + 1
-            tpos.append(row[0].split('\t')[1])
+with open(freqinput) as rcsvfile:
+	reader = csv.reader(rcsvfile, delimiter='\t')
+	next(reader)
+	for row in reader:
+		c = c + 1
+		if int(row[5].split(":")[1]) == 1:
+			csingle = csingle + 1
+			#print(row)
+			spos.append(row[1])
+		if int(row[5].split(":")[1]) == 2:
+			cdouble = cdouble + 1
+			dpos.append(row[1])
+		if int(row[5].split(":")[1]) == 3:
+			ctriple = ctriple + 1
+			tpos.append(row[1])
  
 props = float(csingle)/float(c)
 propd = float(cdouble)/float(c)
