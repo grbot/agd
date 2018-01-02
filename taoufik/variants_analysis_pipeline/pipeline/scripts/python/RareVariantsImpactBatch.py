@@ -33,8 +33,6 @@ currentpopfreq = freqsfolder
 currentpopvcf = vcfsfolder
 #print vcfsfolder
 #print freqsfolder
-outsh = open("rarebatch.sh",'w')
-outsh.write("#!/bin/bash\n")
 for pop in popdirs:
 	#print "Pop : ",pop
 	currentpopfreq = freqsfolder+pop+"/"
@@ -50,13 +48,11 @@ for pop in popdirs:
 	#print popvcfs
 	for i in range(len(popfreqs)):
 		#print popvcfs[i],"and",popfreqs[i]
-		bashCommand = "echo \"python %s --vcf-input %s --rarevariants-input %s --output-folder %s\" | qsub -N %s -l nodes=1:ppn=1,walltime=2:00:00,mem=5GB -e %s -o %s\n" % (pythonscript,currentpopvcf+popvcfs[i],currentpopfreq+popfreqs[i],outputfolder,"EEFin"+pop,"error-EEFin"+pop+".log","out-EEFin"+pop+".log")
-		outsh.write(bashCommand)
-		#print bashCommand
-		#process = subprocess.Popen(bashCommand.split(),shell = True, stdout=subprocess.PIPE)
-		#output, error = process.communicate()
-		#print output
-outsh.close()
+		bashCommand = "python %s --vcf-input %s --rarevariants-input %s --output-folder %s" % (pythonscript,currentpopvcf+popvcfs[i],currentpopfreq+popfreqs[i],outputfolder)
+		process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+		output, error = process.communicate()
+		#print error
+
 
 
 
