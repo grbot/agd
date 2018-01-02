@@ -76,7 +76,7 @@ println "=================================================================="
 println "Annotating Novel Variants in vcfs files for each populations         "
 println "=================================================================="
 process annNovelVariants {
-    tag { "Annotating Novel Variants" } 
+    tag { "Annotating Novel Variants in ${vcf}" } 
   
     input:
 		val(vcf) from vcfs_ch 
@@ -96,7 +96,7 @@ println "=================================================================="
 println "Statistics for Novel Variants                                     "
 println "=================================================================="
 process statsNovelVariants {
-    tag { "Stats on  Novel Variants" } 
+    tag { "Stats on  Novel Variants in ${anvcf}" } 
     input:
 		file anvcf from vcfAnnNovel 
 
@@ -114,7 +114,7 @@ println "==================================================================="
 println "Statistics on Rare Variants, Singletons, doubletons and Tripletons "
 println "==================================================================="
 process statsRareSDTVariants {
-    tag { "Stats Rare Variants SDT" } 
+    tag { "Stats Rare Variants SDT in ${ffreqcount}" } 
     //storeDir "${params.homeagd}/sdt"
     input:
 		val(ffreqcount) from ffreqcounts_ch 
@@ -135,7 +135,7 @@ println "=======================================================================
 println "Combine Statistics on Rare Variants, Singletons, doubletons and Tripletons "
 println "==========================================================================="
 process combineStatsRareSDTVariants {
-    tag { "Combining Stats Rare Variants SDT" } 
+    tag { "Combining Stats Rare Variants SDT in ${statsfreqs}" } 
     
     input:
 		file statsfreqs from csvStatsSTD.toList() 
@@ -154,7 +154,7 @@ println "=======================================================================
 println "Effect Impacts for Rare Variants, Singletons, doubletons and Tripletons    "
 println "==========================================================================="
 process variantsImpacts {
-    tag { "Combining Stats Rare Variants SDT" } 
+    tag { "Combining Stats Rare Variants SDT in ${statsfreqs}" } 
     
     input:
 		file statsfreqs from csvStatsSTDImpact.toList() 
