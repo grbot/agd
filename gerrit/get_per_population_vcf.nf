@@ -44,7 +44,7 @@ process getPerPopulationVCF {
 	   file("${pop}.Eagle.merged.${chrom}_snpeff_dbsnp_anc_gwascat_clinvar_cosmic_mafs-ExAC-KG-agvp-gnomAD-sahgp-trypan_noRelated_noHighMiss_noALT.vcf.gz") into pop_chrom_file 
 
     """
-    /opt/exp_soft/bioinf/bin/bcftools view -S ${sample_to_population_mapping_dir}/${pop}_sample_id_only.tsv ${in_dir}//Eagle.merged.${chrom}_snpeff_dbsnp_anc_gwascat_clinvar_cosmic_mafs-ExAC-KG-agvp-gnomAD-sahgp-trypan_noRelated_noHighMiss_noALT.vcf.gz -O z -o ${pop}.Eagle.merged.${chrom}_snpeff_dbsnp_anc_gwascat_clinvar_cosmic_mafs-ExAC-KG-agvp-gnomAD-sahgp-trypan_noRelated_noHighMiss_noALT.vcf.gz
+    /opt/exp_soft/bioinf/bin/bcftools view -S ${sample_to_population_mapping_dir}/${pop}_sample_id_only.tsv --min-ac=1 ${in_dir}//Eagle.merged.${chrom}_snpeff_dbsnp_anc_gwascat_clinvar_cosmic_mafs-ExAC-KG-agvp-gnomAD-sahgp-trypan_noRelated_noHighMiss_noALT.vcf.gz -O z -o ${pop}.Eagle.merged.${chrom}_snpeff_dbsnp_anc_gwascat_clinvar_cosmic_mafs-ExAC-KG-agvp-gnomAD-sahgp-trypan_noRelated_noHighMiss_noALT.vcf.gz
     """
 
 }
