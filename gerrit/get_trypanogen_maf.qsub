@@ -1,0 +1,29 @@
+#PBS -N get_trypanogen_maf
+#PBS -S/bin/bash
+#PBS -q batch
+#PBS -l walltime=24:00:00
+#PBS -l nodes=1:ppn=24
+#PBS -m abe
+#PBS -d /spaces/gapw/diversity/gerrit/logs/trypanogen_maf/
+#PBS -M gerrit.botha@uct.ac.za
+
+set -x
+
+hostname
+
+module load bioinf
+module load vcftools
+
+ppn=24
+
+rm -rf /spaces/gapw/diversity/gerrit/logs//trypanogen_maf/*.log
+
+# Get MAFs of unphased TrypanoGEN set
+for i in `ls -1 /dataB/popdata/gapw/GAPW_DATA/trypanogen/UNPHASED/*.trypanogen_post_vqsr_clean.norm.vcf.gz`; do prefix="${i%.gz}";echo $prefix; done | /home/gerrit/software/parallel-20160422/install/bin/parallel -j $ppn "{ time vcftools --gzvcf {}.gz --freq --out /spaces/gapw/diversity/gerrit/trypanogen_maf/{/.}.unphased ; } >> /spaces/gapw/diversity/gerrit/logs/trypanogen_maf/{/.}.vcf.gz.log 2>&1"
+rm -rf /spaces/gapw/diversity/gerrit/trypanogen_maf/trypanogen.all.unphased.frq > /spaces/gapw/diversity/gerrit/logs/trypanogen_maf/trypanogen.all.unphased.frq.log
+for chr in {1..22}; do cat /spaces/gapw/diversity/gerrit/trypanogen_maf/$chr.*.unphased.frq ; done > /spaces/gapw/diversity/gerrit/trypanogen_maf/trypanogen.all.unphased.frq
+
+# Get MAFs of phased TrypanoGEN set
+for i in `ls -1 /dataB/popdata/gapw/GAPW_DATA/trypanogen/PHASED/Eagle.trypanogen.*.vcf.gz`; do prefix="${i%.gz}";echo $prefix; done | /home/gerrit/software/parallel-20160422/install/bin/parallel -j $ppn "{ time vcftools --gzvcf {}.gz --freq --out /spaces/gapw/diversity/gerrit/trypanogen_maf/{/.}.phased ; } >> /spaces/gapw/diversity/gerrit/logs/trypanogen_maf/{/.}.vcf.gz.log 2>&1"
+rm -rf /spaces/gapw/diversity/gerrit/trypanogen_maf/trypanogen.all.phased.frq
+for chr in {1..22}; do cat /spaces/gapw/diversity/gerrit/trypanogen_maf/*.$chr.phased.frq ; done > /spaces/gapw/diversity/gerrit/trypanogen_maf/trypanogen.all.phased.frq

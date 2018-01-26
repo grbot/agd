@@ -1,0 +1,2 @@
+nextflow run variants_analysis.nf -c variants_analysis.config --datavcf /home/amoussa/afr_genomic_diversity/vcffolder --datafreq /home/amoussa/afr_genomic_diversity/freqfolder -resume
+
