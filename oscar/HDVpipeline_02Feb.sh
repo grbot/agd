@@ -14,7 +14,7 @@ declare -a pop=("BOT" "BRN" "CAM" "FNB" "WGR" "MAL" "ZAM")
 for p in `seq 0 6`;
 do
   #makes a 7the column and keeps there chromoosme information in columnn 1
-  awk '$7=$1' $pathtofrq_files/${pop[$p]}/${pop[$p]}_dp6_anc_f_dbsnp_snpeff.daf.frq | awk '$1=25'> ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq
+  awk '$7=$1' $pathtofrq_files/${pop[$p]}/${pop[$p]}_dp6_anc_f_dbsnp_snpeff.daf.frq.count | awk '$1=25'> ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq
 done
 
 
@@ -61,6 +61,7 @@ declare -a arr=("BOT_BRN" "BOT_CAM" "BOT_FNB" "BOT_MAL" "BOT_WGR" "BOT_ZAM" "BRN
 for k in `seq 0 20`;
     do
       #before5kb_filt.sh  count number of lines for all poplation pairs before 5kb filtering
+      #rm -f 5kb_filt.txt
         wc -l ${arr[$k]}_HDV_5K.bed > 5kb_filt.txt
 
       #after5kb_filt.sh count number of lines for all population pairs after 5kb filtering
