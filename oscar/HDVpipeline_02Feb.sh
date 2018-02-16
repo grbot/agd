@@ -1,5 +1,5 @@
 #!/bin/bash
-#cd into analysis directory
+#cd into analysis directory #qsub -I -l mem=20gb
 cd /spaces/gapw/diversity/oscar/HDV
 
 #runcolumn7.sh makes a 7the column and keeps there chromoosme information in columnn 1
@@ -8,13 +8,14 @@ cd /spaces/gapw/diversity/oscar/HDV
 
 pathtofrq_files="/spaces/gapw/diversity/mamana/VCF_POP/BAYLOR/DAF"
 pathtovcf_files="/spaces/gapw/diversity/mamana/VCF_FILTERED/BAYLOR"
-
+#less /spaces/gapw/diversity/mamana/VCF_POP/BAYLOR/DAF/BOT/BOT_dp6_anc_f_dbsnp_snpeff.daf.frq.count
 declare -a pop=("BOT" "BRN" "CAM" "FNB" "WGR" "MAL" "ZAM")
 
 for p in `seq 0 6`;
 do
   #makes a 7the column and keeps there chromoosme information in columnn 1
   awk '$7=$1' $pathtofrq_files/${pop[$p]}/${pop[$p]}_dp6_anc_f_dbsnp_snpeff.daf.frq.count | awk '$1=25'> ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq
+  awk '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq > ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq2
 done
 
 

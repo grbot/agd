@@ -1,4 +1,3 @@
-
 args <- commandArgs(trailingOnly = TRUE)
 new = args[1]
 
@@ -33,8 +32,8 @@ extractFrequencies <- function(frqFileColumn)
 }
 
 
-frqFileExtension <- "_4dp6_anc_f_dbsnp_snpeff.daf.frq" #BRN_dp6_anc_f_dbsnp_snpeff.daf.frq Botswana_phased_chr25_dp6_anc_f_dbsnp_snpeff.daf.frq
-#frqFileExtension <- "_test.frq"
+#frqFileExtension <- "_2dp6_anc_f_dbsnp_snpeff.daf.frq" #BRN_dp6_anc_f_dbsnp_snpeff.daf.frq Botswana_phased_chr25_dp6_anc_f_dbsnp_snpeff.daf.frq
+frqFileExtension <- "_4dp6_anc_f_dbsnp_snpeff.daf.frq2"
 delta = 0.6
 popList <- c('BOT', 'BRN', 'CAM', 'FNB' , 'MAL', 'WGR', 'ZAM') # Here you need to include the names of all your populations.
 HDVmat <- matrix(0, nrow=length(popList), ncol=length(popList),dimnames = list(popList,popList))
@@ -54,7 +53,7 @@ for (pop1 in 1:(length(popList)-1)) {
       biallelicPop1 <- includeBiallelicOnly(varPop1)
       biallelicPop2 <- includeBiallelicOnly(varPop2)
       pop1FrqFileBiallelic <- pop1FrqFile[which(varPop1 %in% biallelicPop1),]
-      pop2FrqFileBiallelic <- pop2FrqFile[which(varPop2 %in% biallelicPop2),] 
+      pop2FrqFileBiallelic <- pop2FrqFile[which(varPop2 %in% biallelicPop2),]
       if (setequal(biallelicPop1, biallelicPop2) == FALSE) {
           selectRows = findCommonVars(biallelicPop1, biallelicPop2)
           pop1FrqDf = pop1FrqFileBiallelic[selectRows[[1]],]
@@ -71,7 +70,7 @@ for (pop1 in 1:(length(popList)-1)) {
       HDVpos <- which(abs(deltaVector) >= 0.6)
       if (length(HDVpos) > 0) {
         HDVcounter <- HDVcounter+length(HDVpos)
-        out <- rbind(out, cbind(pop1FrqDf[HDVpos,c(1,2,5)],pop2FrqDf[HDVpos,c(5,7)]))
+        out <- rbind(out, cbind(pop1FrqDf[HDVpos,c(1,2,5)],pop2FrqDf[HDVpos,5,7]))
       }
       print(paste("end chr",chr))
     } #end chr
