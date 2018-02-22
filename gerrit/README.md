@@ -2,7 +2,23 @@
 
 1. Get multi-alleles - `qsub get_multi-alleles.qsub` - output files will be generated in `/space/gapw/diversity/gerrit/multi_alleles_only` using the orignial unphased VCFs in `/spaces/gapw/diversity/gerrit/baylor_post_vqsr_clean`
 2. Remove INDELs from multi-allele sites. `qsub remove_indels.qsub` - output files will be generated in `/spaces/gapw/diversity/gerrit/no_indels` using the multi-allele only files in `/spaces/gapw/diversity/gerrit/multi_alleles_only`
+3. Combine autosomes into one VCF, remove sites with high missingness, remove related individuals.
+```
+module load bioinf
+for i in {1..22}; do ls -1 /spaces/gapw/diversity/gerrit/no_indels/$i.baylor_post_vqsr_clean.multi_alleles_only.no_indels.vcf.gz; done > /spaces/gapw/diversity/gerrit/no_indels_combined/autosome.list 
 
+bcftools concat -f /spaces/gapw/diversity/gerrit/no_indels_combined/autosome.list -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.vcf.gz -O z --threads 24
+
+sed  "s/:/\t/" /spaces/gapw/diversity/filter/high_missing.snp > /spaces/gapw/diversity/filter/high_missing.for_bcftools.snp
+
+view -T ^/spaces/gapw/diversity/filter/high_missing.for_bcftools.snp -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.vcf.gz
+
+bcftools view --force-samples -S ^/spaces/gapw/diversity/filter/related.remove.mamana_ready -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.vcf.gz
+```
+4. Get per population VCFs. Counts can then be done on the sites in each population VCF.
+```
+for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz; done
+```
 
 ## MAF processing
 
