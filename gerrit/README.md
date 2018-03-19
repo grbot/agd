@@ -11,18 +11,63 @@ bcftools concat -f /spaces/gapw/diversity/gerrit/no_indels_combined/autosome.lis
 
 sed  "s/:/\t/" /spaces/gapw/diversity/filter/high_missing.snp > /spaces/gapw/diversity/filter/high_missing.for_bcftools.snp
 
-view -T ^/spaces/gapw/diversity/filter/high_missing.for_bcftools.snp -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.vcf.gz
+bcftools view -T ^/spaces/gapw/diversity/filter/high_missing.for_bcftools.snp -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.vcf.gz
 
 bcftools view --force-samples -S ^/spaces/gapw/diversity/filter/related.remove.mamana_ready -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.vcf.gz
 ```
-4. Get per population VCFs. Counts can then be done on the sites in each population VCF.
+4. Creating some files to finally get "true multi-alleles"
+
+  * Convert VCF to new format for better parsing (see `convert_vcf.py` for output format)
+  
+    ```
+    ./convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.tsv
+    ```
+
+  * Get sites where REF = 0.000 but we have more than 3 alleles.
+  
+     ```
+     cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.tsv | awk '{pos = index($3, ","); ac_ref=substr($3,1,pos-1);if(ac_ref == "0.000"){print $0}}'  | awk '{if(length($2) > 5){print $0}}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000_more_than_tri-allele.tsv
+     ```
+
+  * Get sites where REF = 0.000 but we have  3 alleles.
+
+    ```
+    cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.tsv | awk '{pos = index($3, ","); ac_ref=substr($3,1,pos-1);if(ac_ref == "0.000"){print $0}}'  | awk '{if(length($2) == 5){print $0}}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000_tri-allele.tsv
+    ```
+    
+  * Get all REF = 0.000 sites for doing filtering with BCFtools using inclusion/exclusion (creating .bed file)
+  
+    ```
+    cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000_tri-allele.tsv  /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000_more_than_tri-allele.tsv | awk '{split($1,coord,":"); print coord[1]"\t"(coord[2]-1)"\t"coord[2]}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.bed
+    ```
+  
+  * Get sites with "true" tri-allelles or more
+
+    ```
+    bcftools view -T ^/spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.bed  -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz
+    ```
+
+
+ * Get sites witn "non-true" ref=0.000 tri-alleles and some ref=0.000 quadri-alleles
+ 
+    ```
+    bcftools view -T /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.bed  -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz
+    ```
+
+5. Get per population VCFs. Counts can then be done on the sites in each population VCF.
 ```
-for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz; done
+for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz; done
+```
+
+6. Get normalised sample multi-allele sites
+
+```
+for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do nr_samples=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz |  head -n 200 | grep "^#CHROM" | cut -f10- | sed "s/\t/\n/g" | wc -l`; nr_sites=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz | grep -v "^#" | wc -l`;echo -n $i$'\t'; echo -n  $nr_sites$'\t'$nr_samples$'\t'; echo "scale=3;$nr_sites/$nr_samples" | bc; done
 ```
 
 ## MAF processing
 
-1. Getting MAFs from TrypanoGEN unphased and phased VCFs. `qsub get_trypanogen_maf.qsub` - output files will be generated in `/spaces/gapw/diversity/gerrit/trypanogen_maf/` using the multi-allele only files in `/dataB/popdata/gapw/GAPW_DATA/trypanogen/UNPHASED/*.trypanogen_post_vqsr_clean.norm.vcf.gz` and `/dataB/popdata/gapw/GAPW_DATA/trypanogen/Eagle.trypanogen.*.vcf.gz
+1. Getting MAFs from TrypanoGEN unphased and phased VCFs. `qsub get_trypanogen_maf.qsub` - output files will be generated in `/spaces/gapw/diversity/gerrit/trypanogen_maf/` using the multi-allele only files in `/dataB/popdata/gapw/GAPW_DATA/trypanogen/UNPHASED/*.trypanogen_post_vqsr_clean.norm.vcf.gz` and `/dataB/popdata/gapw/GAPW_DATA/trypanogen/Eagle.trypanogen.*.vcf.gz`
 
 ## Some additional one liners
 *Create one column file for IBT to be filltered*
