@@ -1,7 +1,13 @@
 ## Multi-allele processing
 
-1. Get multi-alleles - `qsub get_multi-alleles.qsub` - output files will be generated in `/space/gapw/diversity/gerrit/multi_alleles_only` using the orignial unphased VCFs in `/spaces/gapw/diversity/gerrit/baylor_post_vqsr_clean`
-2. Remove INDELs from multi-allele sites. `qsub remove_indels.qsub` - output files will be generated in `/spaces/gapw/diversity/gerrit/no_indels` using the multi-allele only files in `/spaces/gapw/diversity/gerrit/multi_alleles_only`
+1. Get multi-alleles - `qsub get_multi-alleles.qsub` - output files will be generated in 
+
+`/space/gapw/diversity/gerrit/multi_alleles_only` using the orignial unphased VCFs in `/spaces/gapw/diversity/gerrit/baylor_post_vqsr_clean`
+
+2. Remove INDELs from multi-allele sites. `qsub remove_indels.qsub` - output files will be generated in 
+
+`/spaces/gapw/diversity/gerrit/no_indels` using the multi-allele only files in `/spaces/gapw/diversity/gerrit/multi_alleles_only`
+
 3. Combine autosomes into one VCF, remove sites with high missingness, remove related individuals.
 ```
 module load bioinf
@@ -64,6 +70,48 @@ for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /space
 ```
 for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do nr_samples=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz |  head -n 200 | grep "^#CHROM" | cut -f10- | sed "s/\t/\n/g" | wc -l`; nr_sites=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz | grep -v "^#" | wc -l`;echo -n $i$'\t'; echo -n  $nr_sites$'\t'$nr_samples$'\t'; echo "scale=3;$nr_sites/$nr_samples" | bc; done
 ```
+
+7. Pull out exonic sites only
+
+  * Downloaded ENSEMBL annotations from here  `http://ftp.ensembl.org/pub/grch37/release-87/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz`
+    
+  * Then pulled out exonic regions only
+
+  ```
+  grep "exon" Homo_sapiens.GRCh37.87.gtf | awk '{ if($1=='1'||$1=="2"||$1=="3"||$1=="4"||$1=="5"||$1=="6"||$1=="7"||$1=="8"||$1=="9"||$1=="10"||$1=="11"||$1=="12"||$1=="13"||$1=="14"||$1=="15"||$1=="16"||$1=="16"||$1=="18"||$1=="19"||$1=="20"||$1=="21"||$1=="22"||$1=="MT"||$1=="Y"||$1=="X"){print $0}}' > Homo_sapiens.GRCh37.87.exon.gtf
+  ```
+
+  * Converted to .bed
+     
+    ```
+    ~/software/bedops/bin/gtf2bed < Homo_sapiens.GRCh37.87.exon.gtf > Homo_sapiens.GRCh37.87.exon.bed
+    ```
+    
+  * Copied to AGD folder so that everyone can access it
+ 
+    ```
+    cp /global/chpdes/gerrit/prep_exonic_non_exonic_bead_pools/Homo_sapiens.GRCh37.87.exon.bed    /spaces/gapw/diversity/filter/
+    ```
+  
+  * Get sites with "true" tri-allelles or more, exonic regions only
+
+    ```
+    bcftools view -T /spaces/gapw/diversity/filter/Homo_sapiens.GRCh37.87.exon.bed -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz
+    ```
+
+  * Get sites witn "non-true" ref=0.000 tri-alleles and some ref=0.000 quadri-alleles, exonic regions only. Also convert to tab format with `convert_vcf.py`.
+  
+    ```
+    bcftools view -T /spaces/gapw/diversity/filter/Homo_sapiens.GRCh37.87.exon.bed -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.exon.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.vcf.gz
+    /home/gerrit/projects/agd/gerrit/convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.exon.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.exon.tsv
+    ```
+
+  * Get per population VCFs, exonic regions only. Also convert to tab format with `convert_vcf.py`.
+  
+    ```
+    for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.vcf.gz; done
+    for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do /home/gerrit/projects/agd/gerrit/convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.tsv ; done
+    ``` 
 
 ## MAF processing
 
