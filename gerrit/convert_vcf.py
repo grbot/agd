@@ -28,7 +28,7 @@ def main():
 
         if (header_printed == 0):
             # Print header chromosome position, alleles, allele frequences and sample names
-            print ("Chrom:Pos\tAlleles\tFreq\t", end="\t")
+            print ("Chrom:Pos\tAlleles\tFreq", end="\t")
             for i in range(0,len(record.samples) - 1):
                 print (record.samples[i].sample, end='\t')
             print (record.samples[len(record.samples) - 1].sample)
