@@ -60,18 +60,32 @@ bcftools view --force-samples -S ^/spaces/gapw/diversity/filter/related.remove.m
     bcftools view -T /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.bed  -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz
     ```
 
-5. Get per population VCFs. Counts can then be done on the sites in each population VCF.
+5. Get per population VCFs.
 ```
 for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz; done
 ```
 
-6. Get normalised sample multi-allele sites
+6. Get per population sample sample counts. Can be used to normalise per site using the table generated in 7.
 
 ```
-for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do nr_samples=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz |  head -n 200 | grep "^#CHROM" | cut -f10- | sed "s/\t/\n/g" | wc -l`; nr_sites=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz | grep -v "^#" | wc -l`;echo -n $i$'\t'; echo -n  $nr_sites$'\t'$nr_samples$'\t'; echo "scale=3;$nr_sites/$nr_samples" | bc; done
+for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do nr_samples=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz |  head -n 200 | grep "^#CHROM" | cut -f10- | sed "s/\t/\n/g" | wc -l`; echo -n $i$'\t'; echo $nr_sites$'\t'$nr_samples$'\t'; done
 ```
 
-7. Pull out exonic sites only
+7. Get table with allele count within populations. Hard coded `get_multi-allele_pop_stats.py` to point to `/spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.tsv`. Then ran:
+
+```
+./get_multi-allele_pop_stats.py
+```
+
+A table like this is generated:
+```
+# 1) Generates allele counts
+# ---- Allele counts ----
+# Population    Bi-allelic count        Tri-allelic count       Other-allelic count     Allele types
+# 2) Generate allele scenario counts
+# Population    Two common alleles and one rare allele  Two rare alleles and one common allele
+```
+8. Pull out exonic sites only
 
   * Downloaded ENSEMBL annotations from here  `http://ftp.ensembl.org/pub/grch37/release-87/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz`
     
