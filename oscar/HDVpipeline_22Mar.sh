@@ -1,5 +1,5 @@
 #!/bin/bash
-#cd into analysis directory #qsub -I -l mem=20gb
+#cd into analysis directory
 cd /spaces/gapw/diversity/oscar/HDV
 
 #runcolumn7.sh makes a 7the column and keeps there chromoosme information in columnn 1
@@ -8,20 +8,20 @@ cd /spaces/gapw/diversity/oscar/HDV
 
 pathtofrq_files="/spaces/gapw/diversity/mamana/VCF_POP/BAYLOR/DAF"
 pathtovcf_files="/spaces/gapw/diversity/mamana/VCF_FILTERED/BAYLOR"
-#less /spaces/gapw/diversity/mamana/VCF_POP/BAYLOR/DAF/BOT/BOT_dp6_anc_f_dbsnp_snpeff.daf.frq.count
+
 declare -a pop=("BOT" "BRN" "CAM" "FNB" "WGR" "MAL" "ZAM")
 
 for p in `seq 0 6`;
 do
   #makes a 7the column and keeps there chromoosme information in columnn 1
   awk '$7=$1' $pathtofrq_files/${pop[$p]}/${pop[$p]}_Eagle.baylor_snpeff_dbsnp_anc_gwascat_clinvar_cosmic_mafs-ExAC-KG-agvp-gnomAD-sahgp-trypan_noRelated_noHighMiss_dp6_ancOnly_biall.daf.frq.count | awk '$1=25'> ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq
-  awk '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq > ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq2
+ #awk '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7}' ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq > ${pop[$p]}_4dp6_anc_f_dbsnp_snpeff.daf.frq2
 done
 
 
 #HDV_Figure1_VCFTools6test5.R Rscript which does the HDV calculations; generates 25HDVList_poppair.txt 
 #and draws figures of HDV in PDF
-Rscript HDV_Figure1_VCFTools6test5.R 25
+Rscript HDV_Figure1_VCFTools6testcheck2_edLB4.R 25
 
 #runhdv.sh correct chromosome results are in the fifth column; copy these into the first to replace chr25
 # runhdv2.sh makes a tab delimited version of HDVlist; good for bedtools intersect
@@ -88,24 +88,28 @@ do
 
 done
 
-#The next steps required vcfquery ; which is part of the vcf.pm (perl module)
-#This module failed to install on the UCT server
+#!/bin/bash
+echo "start vcf-query"
+module load bioinf
+module load vcftools #/Users/oscars_mac/Documents/GAPW/Pipeline/HDVfigs/25Figure1_BOTBRN_Delta0.6Distribution.pdf
+#The next steps required vcfquery ; which is part of the vcf.pm (perl module) #sh running_vcfpm.sh > testvcfpm.txt
+#This module failed to install on the Wits server
 #I therefore 
 #1. installed it on my laptop and ran it as follows:
 
 #2.Copied the filtered vcf files into this directory
-cd /Users/oscars_mac/Documents/GAPW/filtervcfs
-scp oscar@cream.core.wits.ac.za:/home/oscar/HDV/filtervcfs.tar.gz .
+#cd /Users/oscars_mac/Documents/GAPW/filtervcfs
+#scp oscar@cream.core.wits.ac.za:/home/oscar/HDV/filtervcfs.tar.gz .
 
 #3.Extracted these vcfs within this directory
-tar -xzvf filtervcfs2.tar.gz 
+#tar -xzvf filtervcfs2.tar.gz 
 
 #4.Ran runquery_wrapper.sh; which calls the vcf perl module command
 
 #command: sh /Users/oscars_mac/Documents/GAPW/Scripts/runquery_wrapper.sh
 
  #!/bin/bash
-cd /Users/oscars_mac/Documents/GAPW/filtervcfs/
+#cd /Users/oscars_mac/Documents/GAPW/filtervcfs/
  declare -a arr=("BOT_BRN" "BOT_CAM" "BOT_FNB" "BOT_MAL" "BOT_WGR" "BOT_ZAM" "BRN_CAM" "BRN_FNB" "BRN_MAL" "BRN_WGR" "BRN_ZAM" "CAM_FNB" "CAM_MAL" "CAM_WGR" "CAM_ZAM" "FNB_MAL" "FNB_WGR" "FNB_ZAM" "MAL_WGR" "MAL_ZAM" "WGR_ZAM")
 
 for i in `seq 1 22`; #i 
@@ -116,25 +120,24 @@ for i in `seq 1 22`; #i
                 for k in `seq 0 20`;
                 do
              #/Users/oscars_mac/Documents/GAPW/Scripts/runquery.sh $i $k
-             gunzip filter${arr[$k]}chr${i}.vcf.gz
-             /usr/local/bin/vcf-query -f '%CHROM %POS %ID  %INFO/ANN\n' filter${arr[$k]}chr${i}.vcf > ${arr[$k]}_output_${i}.txt
+             #gunzip filter${arr[$k]}chr${i}.vcf.gz
+             vcf-query -f '%CHROM %POS %ID  %INFO/ANN\n' filter${arr[$k]}chr${i}.vcf > ${arr[$k]}_output_${i}.txt
 
              done
 
 done
 
+echo "END vcf-query iterations"
 
-#get_ensembl_ID.sh calls outfile3.sh above and makes a unique list of all genes per chromosome; 
-#!/bin/bash
-
-cd /Users/oscars_mac/Documents/GAPW/filtervcfs/
+echo "start of running genelist runningpm2.sh"
+#cd /Users/oscars_mac/Documents/GAPW/filtervcfs/
  declare -a arr=("BOT_BRN" "BOT_CAM" "BOT_FNB" "BOT_MAL" "BOT_WGR" "BOT_ZAM" "BRN_CAM" "BRN_FNB" "BRN_MAL" "BRN_WGR" "BRN_ZAM" "CAM_FNB" "CAM_MAL" "CAM_WGR" "CAM_ZAM" "FNB_MAL" "FNB_WGR" "FNB_ZAM" "MAL_WGR" "MAL_ZAM" "WGR_ZAM")
 for k in `seq 0 20`;
   do
   rm -f genelist_${arr[$k]}.txt
     for i in `seq 1 22`; 
     do
-      file="/Users/oscars_mac/Documents/GAPW/filtervcfs/${arr[$k]}_output_${i}.txt"
+      file="${arr[$k]}_output_${i}.txt"
       while IFS= read -r line
       do
 
@@ -152,7 +155,9 @@ for k in `seq 0 20`;
       #sh /Users/oscars_mac/Documents/GAPW/Scripts/outfile3.sh $i $k >> genelist_${arr[$k]}.txt
              
     done
-  sort genelist_${arr[$k]}.txt | uniq >list_${arr[$k]}.txt
+  sort genelist_${arr[$k]}.txt | uniq >/spaces/gapw/diversity/oscar/HDV/testall/list_${arr[$k]}.txt
   rm -f genelist_${arr[$k]}.txt
 
 done
+
+echo "END of running genelist runningpm2.sh"
