@@ -12,7 +12,8 @@ import csv
 
 def main():
 
-    base_path = '/home/gerrit/h3a/h3africa/gapw/african_diversity/manuscript_preperation/multi-allele/set1'
+#    base_path = '/home/gerrit/h3a/h3africa/gapw/african_diversity/manuscript_preperation/multi-allele/set1'
+    base_path = '/spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs'
     populations = {'BBC','BOT','BRN','BSZ','FNB','MAL','WGR'}
     population_info = {'BBC' : {},'BOT' : {},'BRN' : {},'BSZ' : {},'FNB' : {},'MAL' : {},'WGR' : {}}
 
@@ -24,7 +25,8 @@ def main():
 def get_population_info_dictionary(base_path, populations, population_info):
 
     for population in populations:
-        file_path = base_path + "/" + population + '.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.tsv'
+        #file_path = base_path + "/" + population + '.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.tsv'
+        file_path = base_path + "/" + population + '.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.tsv'
         csv_file =  open(file_path,newline='')
         csv_reader = csv.reader(csv_file, delimiter='\t')
         csv_reader.__next__() # Skip header
