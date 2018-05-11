@@ -8,7 +8,7 @@
 
 `/spaces/gapw/diversity/gerrit/no_indels` using the multi-allele only files in `/spaces/gapw/diversity/gerrit/multi_alleles_only`
 
-3. Combine autosomes into one VCF, remove sites with high missingness, remove related individuals.
+3. Combine autosomes into one VCF, remove sites with high missingness, remove related individuals, remove sites if any sample has a read depth < 6.
 ```
 module load bioinf
 for i in {1..22}; do ls -1 /spaces/gapw/diversity/gerrit/no_indels/$i.baylor_post_vqsr_clean.multi_alleles_only.no_indels.vcf.gz; done > /spaces/gapw/diversity/gerrit/no_indels_combined/autosome.list 
@@ -20,58 +20,67 @@ sed  "s/:/\t/" /spaces/gapw/diversity/filter/high_missing.snp > /spaces/gapw/div
 bcftools view -T ^/spaces/gapw/diversity/filter/high_missing.for_bcftools.snp -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.vcf.gz
 
 bcftools view --force-samples -S ^/spaces/gapw/diversity/filter/related.remove.mamana_ready -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.vcf.gz
+
+bcftools view -i "MIN(FMT/DP)>=6" /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.vcf.gz
+
 ```
 4. Creating some files to finally get "true multi-alleles"
 
   * Convert VCF to new format for better parsing (see `convert_vcf.py` for output format)
   
     ```
-    ./convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.tsv
+    ./convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.tsv
     ```
 
   * Get sites where REF = 0.000 but we have more than 3 alleles.
   
      ```
-     cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.tsv | awk '{pos = index($3, ","); ac_ref=substr($3,1,pos-1);if(ac_ref == "0.000"){print $0}}'  | awk '{if(length($2) > 5){print $0}}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000_more_than_tri-allele.tsv
+     cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.tsv | awk '{pos = index($3, ","); ac_ref=substr($3,1,pos-1);if(ac_ref == "0.000"){print $0}}'  | awk '{if(length($2) > 5){print $0}}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000_more_than_tri-allele.tsv
      ```
 
   * Get sites where REF = 0.000 but we have  3 alleles.
 
     ```
-    cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.tsv | awk '{pos = index($3, ","); ac_ref=substr($3,1,pos-1);if(ac_ref == "0.000"){print $0}}'  | awk '{if(length($2) == 5){print $0}}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000_tri-allele.tsv
+    cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.tsv | awk '{pos = index($3, ","); ac_ref=substr($3,1,pos-1);if(ac_ref == "0.000"){print $0}}'  | awk '{if(length($2) == 5){print $0}}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000_tri-allele.tsv
     ```
     
   * Get all REF = 0.000 sites for doing filtering with BCFtools using inclusion/exclusion (creating .bed file)
   
     ```
-    cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000_tri-allele.tsv  /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000_more_than_tri-allele.tsv | awk '{split($1,coord,":"); print coord[1]"\t"(coord[2]-1)"\t"coord[2]}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.bed
+    cat /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000_tri-allele.tsv  /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000_more_than_tri-allele.tsv | awk '{split($1,coord,":"); print coord[1]"\t"(coord[2]-1)"\t"coord[2]}' > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000.bed
     ```
   
   * Get sites with "true" tri-allelles or more
 
     ```
-    bcftools view -T ^/spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.bed  -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz
+    bcftools view -T ^/spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000.bed  -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.vcf.gz
     ```
 
 
  * Get sites witn "non-true" ref=0.000 tri-alleles and some ref=0.000 quadri-alleles
  
     ```
-    bcftools view -T /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.bed  -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.vcf.gz
+    bcftools view -T /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000.bed  -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.vcf.gz
     ```
 
 5. Get per population VCFs.
 ```
-for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz; done
+for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.vcf.gz; done
 ```
 
 6. Get per population sample sample counts. Can be used to normalise per site using the table generated in 7.
 
 ```
-for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do nr_samples=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz |  head -n 200 | grep "^#CHROM" | cut -f10- | sed "s/\t/\n/g" | wc -l`; echo -n $i$'\t'; echo $nr_sites$'\t'$nr_samples$'\t'; done
+for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do nr_samples=`zcat /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.vcf.gz |  head -n 200 | grep "^#CHROM" | cut -f10- | sed "s/\t/\n/g" | wc -l`; echo -n $i$'\t'; echo $nr_sites$'\t'$nr_samples$'\t'; done
 ```
 
-7. Get table with allele count within populations. Hard coded `get_multi-allele_pop_stats.py` to point to `/spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.tsv`. Then ran:
+7.Convert per population VCF to new format for better parsing.
+
+```
+for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do /home/gerrit/projects/agd/gerrit/convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.tsv ; done
+```
+
+8. Get table with allele count within populations. Hard coded `get_multi-allele_pop_stats.py` to point to `/spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.tsv`. Then ran:
 
 ```
 ./get_multi-allele_pop_stats.py
@@ -85,7 +94,7 @@ A table like this is generated:
 # 2) Generate allele scenario counts
 # Population    Two common alleles and one rare allele  Two rare alleles and one common allele
 ```
-8. Pull out exonic sites only
+9. Pull out exonic sites only
 
   * Downloaded ENSEMBL annotations from here  `http://ftp.ensembl.org/pub/grch37/release-87/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz`
     
@@ -110,21 +119,21 @@ A table like this is generated:
   * Get sites with "true" tri-allelles or more, exonic regions only
 
     ```
-    bcftools view -T /spaces/gapw/diversity/filter/Homo_sapiens.GRCh37.87.exon.bed -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.vcf.gz
+    bcftools view -T /spaces/gapw/diversity/filter/Homo_sapiens.GRCh37.87.exon.bed -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exon.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.vcf.gz
     ```
 
   * Get sites witn "non-true" ref=0.000 tri-alleles and some ref=0.000 quadri-alleles, exonic regions only. Also convert to tab format with `convert_vcf.py`.
   
     ```
-    bcftools view -T /spaces/gapw/diversity/filter/Homo_sapiens.GRCh37.87.exon.bed -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.exon.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.vcf.gz
-    /home/gerrit/projects/agd/gerrit/convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.exon.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.ref_0.000.exon.tsv
+    bcftools view -T /spaces/gapw/diversity/filter/Homo_sapiens.GRCh37.87.exon.bed -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000.exon.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000.vcf.gz
+    /home/gerrit/projects/agd/gerrit/convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000.exon.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.ref_0.000.exon.tsv
     ```
 
   * Get per population VCFs, exonic regions only. Also convert to tab format with `convert_vcf.py`.
   
     ```
-    for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.vcf.gz; done
-    for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do /home/gerrit/projects/agd/gerrit/convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.no_ref_0.000.exon.tsv ; done
+    for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do bcftools view -S /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i\_sample_id_only.tsv --min-ac=1 --force-samples  -O z -o /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exon.vcf.gz /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exon.vcf.gz; done
+    for i in {"BBC","BOT","BRN","BSZ","FNB","MAL","WGR"}; do /home/gerrit/projects/agd/gerrit/convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exon.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exon.tsv ; do
     ``` 
 
 ## MAF processing
