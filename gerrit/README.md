@@ -94,6 +94,8 @@ A table like this is generated:
 # 2) Generate allele scenario counts
 # Population    Two common alleles and one rare allele  Two rare alleles and one common allele
 ```
+To get the allele counts on the exome region change the hard coded path in `get_multi-allele_pop_stats.py` to point to `/spaces/gapw/diversity/gerrit/no_indels_combined_per_pop_vcfs/$i.all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exome.tsv` and run `./get_multi-allele_pop_stats.py` again.
+
 9. Pull out exonic sites only
 
   * Downloaded ENSEMBL annotations from here  `http://ftp.ensembl.org/pub/grch37/release-87/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz`
