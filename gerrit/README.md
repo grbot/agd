@@ -118,10 +118,11 @@ To get the allele counts on the exome region change the hard coded path in `get_
     cp /global/chpdes/gerrit/prep_exonic_non_exonic_bead_pools/Homo_sapiens.GRCh37.87.exon.bed    /spaces/gapw/diversity/filter/
     ```
   
-  * Get sites with "true" tri-allelles or more, exonic regions only
+  * Get sites with "true" tri-allelles or more, exonic regions only. Also convert to tab format with `convert_vcf.py`.
 
     ```
     bcftools view -T /spaces/gapw/diversity/filter/Homo_sapiens.GRCh37.87.exon.bed -o /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exon.vcf.gz -O z /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.vcf.gz
+    /home/gerrit/projects/agd/gerrit/convert_vcf.py -v /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exon.vcf.gz > /spaces/gapw/diversity/gerrit/no_indels_combined/all.baylor_post_vqsr_clean.multi_alleles_only.no_indels.filterred_high_missing.related_removed.geDP6.no_ref_0.000.exon.tsv
     ```
 
   * Get sites witn "non-true" ref=0.000 tri-alleles and some ref=0.000 quadri-alleles, exonic regions only. Also convert to tab format with `convert_vcf.py`.
